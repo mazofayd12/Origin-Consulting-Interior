@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /en/admin/
+Disallow: /ar/admin/
+Disallow: /api/
+
+Sitemap: https://origin-consulting.com/sitemap.xml

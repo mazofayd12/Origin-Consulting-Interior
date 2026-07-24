@@ -1,0 +1,146 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  fullName     String
+  role         String     @default("ADMIN") // ADMIN, EDITOR
+  avatarUrl    String?
+  auditLogs    AuditLog[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  titleEn     String
+  titleAr     String
+  subtitleEn  String
+  subtitleAr  String
+  descEn      String
+  descAr      String
+  heroImage   String
+  benefitsEn  String   // JSON string
+  benefitsAr  String   // JSON string
+  processEn   String   // JSON string
+  processAr   String   // JSON string
+  faqEn       String   // JSON string
+  faqAr       String   // JSON string
+  gallery     String   // JSON string
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  titleEn     String
+  titleAr     String
+  category    String   // Residential, Commercial, Office, Hospitality, Industrial, Luxury Villas
+  locationEn  String
+  locationAr  String
+  areaSqm     Float
+  year        Int
+  servicesEn  String   // JSON string
+  servicesAr  String   // JSON string
+  coverImage  String
+  images      String   // JSON string array of images
+  descEn      String
+  descAr      String
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BlogPost {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  titleEn     String
+  titleAr     String
+  excerptEn   String
+  excerptAr   String
+  contentEn   String
+  contentAr   String
+  categoryEn  String
+  categoryAr  String
+  tags        String   // JSON string array
+  coverImage  String
+  author      String
+  readingTime String
+  isPublished Boolean  @default(false)
+  seoTitleEn  String?
+  seoDescEn   String?
+  seoTitleAr  String?
+  seoDescAr   String?
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Testimonial {
+  id          String   @id @default(uuid())
+  clientName  String
+  companyEn   String
+  companyAr   String
+  positionEn  String
+  positionAr  String
+  contentEn   String
+  contentAr   String
+  rating      Int      @default(5)
+  avatarUrl   String?
+  clientLogo  String?
+  createdAt   DateTime @default(now())
+}
+
+model TeamMember {
+  id          String   @id @default(uuid())
+  nameEn      String
+  nameAr      String
+  roleEn      String
+  roleAr      String
+  bioEn       String
+  bioAr       String
+  imageUrl    String
+  socialLinks String   // JSON string
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model ContactInquiry {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String
+  subject   String
+  message   String
+  status    String   @default("NEW") // NEW, IN_PROGRESS, RESOLVED, ARCHIVED
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  resource  String
+  ipAddress String
+  userAgent String
+  details   String   // JSON string
+  createdAt DateTime @default(now())
+}
+
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   // JSON string
+  updatedAt DateTime @updatedAt
+}

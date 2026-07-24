@@ -1,0 +1,21 @@
+# Node modules at all levels
+**/node_modules
+**/node_modules/
+node_modules/
+
+# Next.js & Build outputs
+**/.next
+**/.next/
+**/dist
+**/build
+**/out
+
+# SQLite databases
+**/*.db
+**/*.db-journal
+
+# Logs & Environment
+**/*.log
+**/.env
+**/.env*.local
+.DS_Store

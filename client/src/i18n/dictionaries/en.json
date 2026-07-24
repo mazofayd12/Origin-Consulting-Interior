@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "services": "Services",
+    "portfolio": "Portfolio",
+    "blog": "Blog",
+    "testimonials": "Testimonials",
+    "contact": "Contact Us",
+    "admin": "Admin Portal"
+  },
+  "hero": {
+    "title": "Designing Spaces. Creating Experiences.",
+    "subtitle": "Origin Consulting Interior delivers ultra-luxury Architecture, Interior Design, MEP Engineering, Structural Engineering and Project Management.",
+    "viewProjects": "View Projects",
+    "contactUs": "Contact Us"
+  },
+  "about": {
+    "title": "Crafting Architectural Icons & Timeless Interior Sanctuaries",
+    "storyTitle": "Our Legacy",
+    "story": "Origin Consulting Interior was founded on the principle that spaces should elevate human experience. With multi-disciplinary master engineers and visionary architects based across Dubai and KSA, we craft structures that blend technical excellence with understated luxury.",
+    "vision": "To be the premier architectural and interior engineering firm across the Middle East.",
+    "mission": "Delivering unparalleled engineering precision, sustainable luxury, and turnkey project excellence.",
+    "values": "Integrity, Innovation, Timeless Aesthetics, Master Craftsmanship"
+  },
+  "stats": {
+    "projects": "Projects Delivered",
+    "sqm": "SQM Designed",
+    "awards": "International Awards",
+    "years": "Years of Excellence"
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "subtitle": "Discuss your upcoming architectural or interior engineering vision with our senior partners.",
+    "name": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone / WhatsApp",
+    "subject": "Project Type",
+    "message": "Message",
+    "submit": "Send Inquiry",
+    "success": "Thank you. Your inquiry has been sent to our executive team."
+  }
+}

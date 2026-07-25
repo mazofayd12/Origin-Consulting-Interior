@@ -1,10 +1,11 @@
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 model User {
@@ -13,52 +14,91 @@ model User {
   passwordHash String
   fullName     String
   role         String     @default("ADMIN")
-  avatarUrl    String?
+  roleId       String?
+  roleRef      Role?      @relation(fields: [roleId], references: [id])
+  avatarUrl    String?    @db.Text
   auditLogs    AuditLog[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
 
-model Service {
+model Role {
   id          String   @id @default(uuid())
-  slug        String   @unique
-  titleEn     String
-  titleAr     String
-  subtitleEn  String
-  subtitleAr  String
-  descEn      String
-  descAr      String
-  heroImage   String
-  benefitsEn  String
-  benefitsAr  String
-  processEn   String
-  processAr   String
-  faqEn       String
-  faqAr       String
-  gallery     String
+  name        String   @unique
+  description String?  @db.Text
+  permissions String   @db.Text // JSON array of permission keys
+  users       User[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
+model ProjectCategory {
+  id        String    @id @default(uuid())
+  slug      String    @unique
+  nameEn    String
+  nameAr    String
+  order     Int       @default(0)
+  projects  Project[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
 model Project {
-  id          String   @id @default(uuid())
-  slug        String   @unique
-  titleEn     String
-  titleAr     String
-  category    String
-  locationEn  String
-  locationAr  String
-  areaSqm     Float
-  year        Int
-  servicesEn  String
-  servicesAr  String
-  coverImage  String
-  images      String
-  descEn      String
-  descAr      String
-  isFeatured  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String          @id @default(uuid())
+  slug              String          @unique
+  titleEn           String
+  titleAr           String
+  categoryId        String?
+  category          ProjectCategory? @relation(fields: [categoryId], references: [id])
+  locationEn        String
+  locationAr        String
+  mapLocation       String?         @db.Text // Google Maps URL / coordinates
+  areaSqm           Float           @default(0)
+  year              Int             @default(2026)
+  clientName        String?
+  architect         String?
+  servicesEn        String          @db.Text
+  servicesAr        String          @db.Text
+  coverImage        String          @db.Text
+  gallery           String          @db.Text // JSON array of image URLs
+  beforeAfterImages String?         @db.Text // JSON array of { before, after }
+  videos            String?         @db.Text // JSON array of video URLs
+  pdfFiles          String?         @db.Text // JSON array of { title, url }
+  cadDrawings       String?         @db.Text // JSON array of { title, url }
+  timeline          String?         @db.Text // JSON array of { phase, date, status }
+  descEn            String          @db.Text
+  descAr            String          @db.Text
+  status            String          @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  isFeatured        Boolean         @default(false)
+  order             Int             @default(0)
+  seoTitleEn        String?
+  seoDescEn         String?         @db.Text
+  seoTitleAr        String?
+  seoDescAr         String?         @db.Text
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model Service {
+  id         String   @id @default(uuid())
+  slug       String   @unique
+  titleEn    String
+  titleAr    String
+  subtitleEn String   @db.Text
+  subtitleAr String   @db.Text
+  descEn     String   @db.Text
+  descAr     String   @db.Text
+  heroImage  String   @db.Text
+  benefitsEn String   @db.Text // JSON array
+  benefitsAr String   @db.Text // JSON array
+  processEn  String   @db.Text // JSON array
+  processAr  String   @db.Text // JSON array
+  faqEn      String   @db.Text // JSON array
+  faqAr      String   @db.Text // JSON array
+  gallery    String   @db.Text // JSON array
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model BlogPost {
@@ -66,39 +106,40 @@ model BlogPost {
   slug        String   @unique
   titleEn     String
   titleAr     String
-  excerptEn   String
-  excerptAr   String
-  contentEn   String
-  contentAr   String
+  excerptEn   String   @db.Text
+  excerptAr   String   @db.Text
+  contentEn   String   @db.LongText
+  contentAr   String   @db.LongText
   categoryEn  String
   categoryAr  String
-  tags        String
-  coverImage  String
-  author      String
-  readingTime String
+  tags        String   @db.Text // Comma separated or JSON
+  coverImage  String   @db.Text
+  author      String   @default("Origin Team")
+  readingTime String   @default("5 min")
   isPublished Boolean  @default(false)
   seoTitleEn  String?
-  seoDescEn   String?
+  seoDescEn   String?  @db.Text
   seoTitleAr  String?
-  seoDescAr   String?
+  seoDescAr   String?  @db.Text
   publishedAt DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Testimonial {
-  id          String   @id @default(uuid())
-  clientName  String
-  companyEn   String
-  companyAr   String
-  positionEn  String
-  positionAr  String
-  contentEn   String
-  contentAr   String
-  rating      Int      @default(5)
-  avatarUrl   String?
-  clientLogo  String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  clientName String
+  companyEn  String
+  companyAr  String
+  positionEn String
+  positionAr String
+  contentEn  String   @db.Text
+  contentAr  String   @db.Text
+  rating     Int      @default(5)
+  avatarUrl  String?  @db.Text
+  clientLogo String?  @db.Text
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
 }
 
 model TeamMember {
@@ -107,12 +148,25 @@ model TeamMember {
   nameAr      String
   roleEn      String
   roleAr      String
-  bioEn       String
-  bioAr       String
-  imageUrl    String
-  socialLinks String
+  bioEn       String   @db.Text
+  bioAr       String   @db.Text
+  imageUrl    String   @db.Text
+  socialLinks String   @db.Text // JSON object
   order       Int      @default(0)
   createdAt   DateTime @default(now())
+}
+
+model MediaFile {
+  id         String   @id @default(uuid())
+  filename   String
+  url        String   @db.Text
+  mimeType   String
+  size       Int
+  folder     String   @default("general")
+  dimensions String?
+  altEn      String?
+  altAr      String?
+  createdAt  DateTime @default(now())
 }
 
 model ContactInquiry {
@@ -121,9 +175,63 @@ model ContactInquiry {
   email     String
   phone     String
   subject   String
-  message   String
+  message   String   @db.Text
+  status    String   @default("NEW") // NEW, IN_PROGRESS, RESOLVED
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+}
+
+model NewsletterSubscriber {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  isSubscribed Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model Form {
+  id          String           @id @default(uuid())
+  slug        String           @unique
+  titleEn     String
+  titleAr     String
+  fields      String           @db.LongText // JSON array of fields config
+  isEnabled   Boolean          @default(true)
+  submissions FormSubmission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model FormSubmission {
+  id        String   @id @default(uuid())
+  formId    String
+  form      Form     @relation(fields: [formId], references: [id])
+  data      String   @db.LongText // JSON submitted data
   status    String   @default("NEW")
   createdAt DateTime @default(now())
+}
+
+model HomepageSection {
+  id         String   @id @default(uuid())
+  sectionKey String   @unique // hero, stats, services, projects, testimonials, clients, cta, footer
+  nameEn     String
+  nameAr     String
+  order      Int      @default(0)
+  isVisible  Boolean  @default(true)
+  content    String   @db.LongText // JSON section configuration
+  updatedAt  DateTime @updatedAt
+}
+
+model ThemeSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.LongText // JSON theme configuration (colors, fonts, layout)
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.LongText
+  updatedAt DateTime @updatedAt
 }
 
 model AuditLog {
@@ -134,13 +242,24 @@ model AuditLog {
   resource  String
   ipAddress String
   userAgent String
-  details   String
+  details   String   @db.Text
   createdAt DateTime @default(now())
 }
 
-model SiteSetting {
+model BackupRecord {
   id        String   @id @default(uuid())
-  key       String   @unique
-  value     String
-  updatedAt DateTime @updatedAt
+  filename  String
+  filesize  Int
+  status    String   @default("SUCCESS")
+  createdAt DateTime @default(now())
+}
+
+model AnalyticsStat {
+  id             String   @id @default(uuid())
+  date           String   @unique // YYYY-MM-DD
+  pageViews      Int      @default(0)
+  uniqueVisitors Int      @default(0)
+  projectViews   Int      @default(0)
+  blogViews      Int      @default(0)
+  createdAt      DateTime @default(now())
 }

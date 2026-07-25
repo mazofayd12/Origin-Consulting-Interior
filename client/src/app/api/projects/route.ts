@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -13,12 +14,16 @@ export async function GET(req: NextRequest) {
 
     const projects = await prisma.project.findMany({ where, orderBy: { createdAt: 'desc' } });
 
-    const parsed = projects.map((p) => ({
-      ...p,
-      servicesEn: JSON.parse(p.servicesEn || '[]'),
-      servicesAr: JSON.parse(p.servicesAr || '[]'),
-      images: JSON.parse(p.images || '[]'),
-    }));
+    const parsed = projects.map((p) => {
+      const galleryList = JSON.parse(p.gallery || '[]');
+      return {
+        ...p,
+        servicesEn: JSON.parse(p.servicesEn || '[]'),
+        servicesAr: JSON.parse(p.servicesAr || '[]'),
+        gallery: galleryList,
+        images: galleryList, // backwards compatibility
+      };
+    });
 
     return NextResponse.json(parsed);
   } catch (error: any) {
@@ -29,12 +34,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
+    const galleryPayload = data.gallery || data.images || [];
+    
+    // Destructure out 'images' if provided to prevent unknown field error in Prisma
+    const { images, ...restData } = data;
+
     const project = await prisma.project.create({
       data: {
-        ...data,
+        ...restData,
         servicesEn: JSON.stringify(data.servicesEn || []),
         servicesAr: JSON.stringify(data.servicesAr || []),
-        images: JSON.stringify(data.images || []),
+        gallery: JSON.stringify(galleryPayload),
       },
     });
     return NextResponse.json(project, { status: 201 });

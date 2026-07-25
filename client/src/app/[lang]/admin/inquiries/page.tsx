@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Table } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
@@ -55,7 +54,7 @@ export default function ManageInquiriesPage() {
   };
 
   return (
-    <AdminLayout>
+    <div>
       <div className="space-y-8">
         <div className="border-b border-neutral-800 pb-6">
           <h1 className="text-3xl font-extrabold text-white">Client Inquiries (مسترجعة حياً من قاعدة البيانات Prisma DB)</h1>
@@ -86,6 +85,6 @@ export default function ManageInquiriesPage() {
           />
         )}
       </div>
-    </AdminLayout>
+    </div>
   );
 }

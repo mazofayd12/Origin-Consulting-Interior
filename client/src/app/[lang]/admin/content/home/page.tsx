@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
@@ -23,7 +22,7 @@ export default function ManageHomePageContent() {
   };
 
   return (
-    <AdminLayout>
+    <div>
       <div className="max-w-4xl space-y-8">
         <div className="border-b border-neutral-800 pb-6">
           <h1 className="text-3xl font-extrabold text-white">Homepage Sections Manager (محتوى الصفحة الرئيسية)</h1>
@@ -65,6 +64,6 @@ export default function ManageHomePageContent() {
           </Button>
         </form>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

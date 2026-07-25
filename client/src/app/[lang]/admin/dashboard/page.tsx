@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Table } from '@/components/ui/Table';
@@ -47,7 +46,7 @@ export default function AdminDashboardOverview() {
   ];
 
   return (
-    <AdminLayout>
+    <div>
       <div className="space-y-10">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
@@ -128,6 +127,6 @@ export default function AdminDashboardOverview() {
           />
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

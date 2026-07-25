@@ -40,6 +40,13 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   const lang = (params?.lang as string) || 'en';
   const { logout, user } = useAuth();
 
+  React.useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('origin_token') : null;
+    if (!token && !pathname.includes('/admin/login')) {
+      router.replace(`/${lang}/admin/login`);
+    }
+  }, [pathname, lang, router]);
+
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     Content: true,
     Projects: true,

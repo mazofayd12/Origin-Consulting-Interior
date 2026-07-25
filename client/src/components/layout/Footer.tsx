@@ -1,12 +1,56 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/context';
 import { MapPin, Phone, Mail, Instagram, Linkedin, Twitter } from 'lucide-react';
+import axios from 'axios';
 
 export const Footer: React.FC = () => {
   const { lang, t } = useI18n();
+
+  const [settings, setSettings] = useState({
+    email: 'info@origin-consulting.com',
+    phoneDubai: '+971 4 800 67444',
+    phoneRiyadh: '+966 11 400 9900',
+    addressDubai: 'Dubai Marina Plaza, Suite 2804, Dubai, UAE',
+    addressDubaiAr: 'دبي مارينا بلازا، جناح 2804، دبي، الإمارات',
+    addressRiyadh: 'King Fahd Road, KAFD Tower 12, Riyadh, KSA',
+    addressRiyadhAr: 'طريق الملك فهد، مركز كافد برج 12، الرياض، السعودية',
+    linkedin: 'https://linkedin.com',
+    instagram: 'https://instagram.com',
+    twitter: 'https://twitter.com',
+    logoUrl: '/images/logo.png',
+  });
+
+  useEffect(() => {
+    async function fetchFooterSettings() {
+      try {
+        const res = await axios.get('/api/settings');
+        if (res.data && Object.keys(res.data).length > 0) {
+          const contact = res.data.contact || {};
+          const general = res.data.general || {};
+          const social = res.data.social || {};
+
+          setSettings((prev) => ({
+            ...prev,
+            email: contact.email || prev.email,
+            phoneDubai: contact.phoneDubai || prev.phoneDubai,
+            phoneRiyadh: contact.phoneRiyadh || prev.phoneRiyadh,
+            addressDubai: contact.addressDubai || prev.addressDubai,
+            addressRiyadh: contact.addressRiyadh || prev.addressRiyadh,
+            linkedin: social.linkedin || prev.linkedin,
+            instagram: social.instagram || prev.instagram,
+            twitter: social.twitter || prev.twitter,
+            logoUrl: general.logoUrl || prev.logoUrl,
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to load footer settings', err);
+      }
+    }
+    fetchFooterSettings();
+  }, []);
 
   return (
     <footer className="bg-neutral-950 border-t border-neutral-900 text-neutral-400 text-sm">
@@ -15,7 +59,7 @@ export const Footer: React.FC = () => {
         <div className="flex flex-col gap-4">
           <Link href={`/${lang}`}>
             <img
-              src="/images/logo.png"
+              src={settings.logoUrl}
               alt="Origin Design Logo"
               className="h-12 w-auto object-contain drop-shadow-[0_2px_10px_rgba(183,154,91,0.4)]"
             />
@@ -26,15 +70,21 @@ export const Footer: React.FC = () => {
               : 'رواد التميز المعماري والتصميم الداخلي الفاخر والهندسة المتكاملة في دبي والرياض والأسواق العالمية.'}
           </p>
           <div className="flex items-center gap-4 mt-2 text-brand-gold">
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
-              <Linkedin className="w-5 h-5" />
-            </a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
-              <Instagram className="w-5 h-5" />
-            </a>
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
-              <Twitter className="w-5 h-5" />
-            </a>
+            {settings.linkedin && (
+              <a href={settings.linkedin} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
+                <Linkedin className="w-5 h-5" />
+              </a>
+            )}
+            {settings.instagram && (
+              <a href={settings.instagram} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
+                <Instagram className="w-5 h-5" />
+              </a>
+            )}
+            {settings.twitter && (
+              <a href={settings.twitter} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
+                <Twitter className="w-5 h-5" />
+              </a>
+            )}
           </div>
         </div>
 
@@ -60,11 +110,11 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col gap-3 text-xs">
             <div className="flex gap-2">
               <MapPin className="w-4 h-4 text-brand-gold flex-shrink-0 mt-0.5" />
-              <span>{lang === 'en' ? 'Dubai Marina Plaza, Suite 2804, Dubai, UAE' : 'دبي مارينا بلازا، جناح 2804، دبي، الإمارات'}</span>
+              <span>{lang === 'en' ? settings.addressDubai : (settings.addressDubaiAr || settings.addressDubai)}</span>
             </div>
             <div className="flex gap-2">
               <MapPin className="w-4 h-4 text-brand-gold flex-shrink-0 mt-0.5" />
-              <span>{lang === 'en' ? 'King Fahd Road, KAFD Tower 12, Riyadh, KSA' : 'طريق الملك فهد، مركز كافد برج 12، الرياض، السعودية'}</span>
+              <span>{lang === 'en' ? settings.addressRiyadh : (settings.addressRiyadhAr || settings.addressRiyadh)}</span>
             </div>
           </div>
         </div>
@@ -77,11 +127,11 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col gap-3 text-xs">
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-brand-gold" />
-              <span>+971 4 800 67444 | +966 11 400 9900</span>
+              <span>{settings.phoneDubai} | {settings.phoneRiyadh}</span>
             </div>
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-brand-gold" />
-              <span>info@origin-consulting.com</span>
+              <span>{settings.email}</span>
             </div>
           </div>
         </div>

@@ -18,4 +18,8 @@ node_modules/
 **/*.log
 **/.env
 **/.env*.local
-.DS_Store
+# Archives and DB temporary files
+*.tar.gz
+**/*.db-shm
+**/*.db-wal
+

@@ -38,7 +38,7 @@ export const I18nProvider: React.FC<{ children: React.ReactNode; initialLang?: L
     const keys = path.split('.');
     let current = dictionaries[lang];
     for (const key of keys) {
-      if (current[key] === undefined) return path;
+      if (!current || typeof current !== 'object' || current[key] === undefined) return path;
       current = current[key];
     }
     return current;

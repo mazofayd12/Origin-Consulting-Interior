@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Table } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
@@ -93,7 +92,7 @@ export default function ManageUsersPage() {
   };
 
   return (
-    <AdminLayout>
+    <div>
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-800 pb-6">
           <div>
@@ -236,6 +235,6 @@ export default function ManageUsersPage() {
           </form>
         </Modal>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

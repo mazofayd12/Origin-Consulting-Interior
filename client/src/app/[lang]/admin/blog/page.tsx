@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { AdminLayout } from '@/components/layout/AdminLayout';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Table } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Skeleton';
 import { Alert } from '@/components/ui/Alert';
-import { Plus, Edit, Trash } from 'lucide-react';
+import { Plus, Edit, Trash, Upload, Loader2 } from 'lucide-react';
+import axios from 'axios';
 
 interface BlogPostData {
   id: string;
@@ -37,29 +37,11 @@ export default function ManageBlogPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [alertMsg, setAlertMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [uploading, setUploading] = useState(false);
 
-  const [posts, setPosts] = useState<BlogPostData[]>([
-    {
-      id: '1',
-      slug: 'future-of-sustainable-architecture-gcc-2026',
-      titleEn: 'The Future of Sustainable Architecture in the GCC',
-      titleAr: 'مستقبل العمارة المستدامة في دول مجلس التعاون الخليجي',
-      excerptEn: 'How biophilic design, net-zero energy codes, and smart glass facades are revolutionizing Middle Eastern architecture.',
-      excerptAr: 'كيف تساهم التصاميم المستدامة والواجهات الذكية في إحداث ثورة في العمارة بالشرق الأوسط.',
-      contentEn: '<p>The modern architectural landscape in the Gulf region is witnessing a historic paradigm shift...</p>',
-      contentAr: '<p>تشهد الساحة المعمارية الحديثة في منطقة الخليج تحولاً تاريخياً نحو أداء المباني الصفرية...</p>',
-      categoryEn: 'Architecture Trends',
-      categoryAr: 'اتجاهات العمارة',
-      tags: ['Sustainability', 'GCC', 'Smart Buildings', 'LEED'],
-      coverImage: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
-      author: 'Dr. Tariq Al-Mansoor',
-      readingTime: '5 min read',
-      isPublished: true,
-      seoTitleEn: 'Future of Sustainable Architecture GCC 2026 | Origin Insights',
-      seoDescEn: 'Explore how sustainable architectural engineering is shaping green luxury developments.',
-      publishedAt: '2026-07-24',
-    },
-  ]);
+  const [posts, setPosts] = useState<BlogPostData[]>([]);
 
   const defaultForm: Omit<BlogPostData, 'id'> = {
     slug: '',
@@ -80,10 +62,26 @@ export default function ManageBlogPage() {
     seoDescEn: '',
     seoTitleAr: '',
     seoDescAr: '',
-    publishedAt: '2026-07-24',
+    publishedAt: new Date().toISOString().split('T')[0],
   };
 
   const [form, setForm] = useState<Omit<BlogPostData, 'id'>>(defaultForm);
+
+  const fetchBlogPostsFromDB = async () => {
+    setFetching(true);
+    try {
+      const res = await axios.get('/api/blog');
+      setPosts(res.data);
+    } catch (err) {
+      console.error('Failed to fetch blog posts from DB', err);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlogPostsFromDB();
+  }, []);
 
   const handleOpenCreate = () => {
     setEditingId(null);
@@ -97,42 +95,80 @@ export default function ManageBlogPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this article?')) {
-      setPosts(posts.filter((p) => p.id !== id));
-      setAlertMsg('Article deleted successfully.');
-      setTimeout(() => setAlertMsg(''), 3000);
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this article permanently from database?')) {
+      try {
+        const token = localStorage.getItem('origin_token');
+        await axios.delete(`/api/blog/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAlertMsg('Article permanently deleted from database!');
+        fetchBlogPostsFromDB();
+      } catch (err: any) {
+        setAlertMsg('Failed to delete: ' + (err.response?.data?.error || err.message));
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const slugGen = form.slug || form.titleEn.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (editingId) {
-      setPosts(posts.map((p) => (p.id === editingId ? { ...form, id: editingId, slug: slugGen } : p)));
-      setAlertMsg('Blog article updated with full content & SEO metadata!');
-    } else {
-      const newPost: BlogPostData = {
-        ...form,
-        id: String(Date.now()),
-        slug: slugGen,
-      };
-      setPosts([newPost, ...posts]);
-      setAlertMsg('New Blog Article published successfully!');
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await axios.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (res.data?.url) {
+        setForm((prev) => ({ ...prev, coverImage: res.data.url }));
+        setAlertMsg('Image uploaded to VPS successfully!');
+        setTimeout(() => setAlertMsg(''), 3000);
+      }
+    } catch (err: any) {
+      alert('Upload failed: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setUploading(false);
     }
+  };
 
-    setIsModalOpen(false);
-    setTimeout(() => setAlertMsg(''), 3000);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const slugGen = form.slug || form.titleEn.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const token = localStorage.getItem('origin_token');
+
+    try {
+      if (editingId) {
+        await axios.put(`/api/blog/${editingId}`, { ...form, slug: slugGen }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAlertMsg('Blog article updated in database successfully!');
+      } else {
+        await axios.post('/api/blog', { ...form, slug: slugGen }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAlertMsg('New Blog Article published and saved to database!');
+      }
+      setIsModalOpen(false);
+      fetchBlogPostsFromDB();
+    } catch (err: any) {
+      setAlertMsg('Error saving blog: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
+      setTimeout(() => setAlertMsg(''), 4000);
+    }
   };
 
   return (
-    <AdminLayout>
+    <div>
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-800 pb-6">
           <div>
-            <h1 className="text-3xl font-extrabold text-white">Blog & Content Manager</h1>
-            <p className="text-xs text-neutral-400 mt-1 uppercase tracking-widest">Create, edit, and publish SEO-optimized journal articles</p>
+            <h1 className="text-3xl font-extrabold text-white">Blog & Content Manager (مربوط بقاعدة البيانات)</h1>
+            <p className="text-xs text-neutral-400 mt-1 uppercase tracking-widest">Create, edit, and publish SEO-optimized journal articles directly to Database</p>
           </div>
           <Button variant="gold" size="sm" onClick={handleOpenCreate} className="gap-2">
             <Plus className="w-4 h-4" />
@@ -142,40 +178,44 @@ export default function ManageBlogPage() {
 
         {alertMsg && <Alert type="success" message={alertMsg} />}
 
-        <Table
-          columns={[
-            {
-              header: 'Article Title',
-              accessor: (row) => (
-                <div className="flex items-center gap-3">
-                  <img src={row.coverImage} alt={row.titleEn} className="w-12 h-12 rounded object-cover border border-brand-gold/30" />
-                  <div>
-                    <h4 className="text-white font-bold text-sm">{row.titleEn}</h4>
-                    <span className="text-xs text-brand-gold block font-mono">{row.titleAr}</span>
+        {fetching ? (
+          <div className="text-center py-12 text-neutral-400 font-semibold">Loading articles from database...</div>
+        ) : (
+          <Table
+            columns={[
+              {
+                header: 'Article Title',
+                accessor: (row) => (
+                  <div className="flex items-center gap-3">
+                    <img src={row.coverImage} alt={row.titleEn} className="w-12 h-12 rounded object-cover border border-brand-gold/30" />
+                    <div>
+                      <h4 className="text-white font-bold text-sm">{row.titleEn}</h4>
+                      <span className="text-xs text-brand-gold block font-mono">{row.titleAr}</span>
+                    </div>
                   </div>
-                </div>
-              ),
-            },
-            { header: 'Category', accessor: 'categoryEn' },
-            { header: 'Author', accessor: 'author' },
-            { header: 'Reading Time', accessor: 'readingTime' },
-            { header: 'Status', accessor: (row) => <Badge variant={row.isPublished ? 'success' : 'neutral'}>{row.isPublished ? 'Published' : 'Draft'}</Badge> },
-            {
-              header: 'Actions',
-              accessor: (row) => (
-                <div className="flex gap-2">
-                  <button onClick={() => handleOpenEdit(row)} className="p-2 text-neutral-400 hover:text-brand-gold transition-colors">
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handleDelete(row.id)} className="p-2 text-neutral-400 hover:text-red-500 transition-colors">
-                    <Trash className="w-4 h-4" />
-                  </button>
-                </div>
-              ),
-            },
-          ]}
-          data={posts}
-        />
+                ),
+              },
+              { header: 'Category', accessor: 'categoryEn' },
+              { header: 'Author', accessor: 'author' },
+              { header: 'Reading Time', accessor: 'readingTime' },
+              { header: 'Status', accessor: (row) => <Badge variant={row.isPublished ? 'success' : 'neutral'}>{row.isPublished ? 'Published' : 'Draft'}</Badge> },
+              {
+                header: 'Actions',
+                accessor: (row) => (
+                  <div className="flex gap-2">
+                    <button onClick={() => handleOpenEdit(row)} className="p-2 text-neutral-400 hover:text-brand-gold transition-colors">
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(row.id)} className="p-2 text-neutral-400 hover:text-red-500 transition-colors">
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  </div>
+                ),
+              },
+            ]}
+            data={posts}
+          />
+        )}
 
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingId ? 'Edit Article' : 'Write New Article'}>
           <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto pr-2">
@@ -248,8 +288,29 @@ export default function ManageBlogPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-neutral-800 pt-4">
-              <Input label="Cover Image URL" value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} required />
+            {/* Cover Image URL & Direct VPS Upload Button */}
+            <div className="space-y-3 border-t border-b border-neutral-800 py-4">
+              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 block">Cover Image</label>
+              <div className="flex items-center gap-3">
+                <Input
+                  className="flex-1"
+                  placeholder="https://... or /uploads/..."
+                  value={form.coverImage}
+                  onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
+                  required
+                />
+                <label className="cursor-pointer bg-brand-gold text-black hover:bg-brand-gold/80 px-4 py-2.5 rounded-sm font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors">
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  <span>{uploading ? 'Uploading...' : 'Upload Image'}</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                </label>
+              </div>
+              {form.coverImage && (
+                <img src={form.coverImage} alt="Preview" className="w-24 h-16 object-cover rounded border border-brand-gold/40 mt-2" />
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Tags (comma separated)" value={form.tags.join(', ')} onChange={(e) => setForm({ ...form, tags: e.target.value.split(',').map((t) => t.trim()) })} />
             </div>
 
@@ -266,12 +327,12 @@ export default function ManageBlogPage() {
               </label>
             </div>
 
-            <Button type="submit" variant="gold" size="lg" className="w-full mt-6">
-              {editingId ? 'Save Changes' : 'Publish Article'}
+            <Button type="submit" variant="gold" size="lg" className="w-full mt-6" isLoading={loading}>
+              {editingId ? 'Save Changes to DB' : 'Publish Article to DB'}
             </Button>
           </form>
         </Modal>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

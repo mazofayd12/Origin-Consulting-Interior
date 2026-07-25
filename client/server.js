@@ -1,28 +1,21 @@
 const { createServer } = require('http');
 const { parse } = require('url');
-const path = require('path');
-const fs = require('fs');
+const next = require('next');
 
-// Check if standalone server exists
-const standaloneServerPath = path.join(__dirname, '.next', 'standalone', 'server.js');
+const port = parseInt(process.env.PORT, 10) || 3000;
+const dev = false; // Always production when deployed
+const app = next({ dev, dir: __dirname });
+const handle = app.getRequestHandler();
 
-if (fs.existsSync(standaloneServerPath)) {
-  console.log('Loading Next.js standalone server from:', standaloneServerPath);
-  require(standaloneServerPath);
-} else {
-  const next = require('next');
-  const port = parseInt(process.env.PORT, 10) || 3000;
-  const dev = process.env.NODE_ENV !== 'production';
-  const app = next({ dev });
-  const handle = app.getRequestHandler();
-
-  app.prepare().then(() => {
-    createServer((req, res) => {
-      const parsedUrl = parse(req.url, true);
-      handle(req, res, parsedUrl);
-    }).listen(port, (err) => {
-      if (err) throw err;
-      console.log(`> Ready on http://localhost:${port}`);
-    });
+app.prepare().then(() => {
+  createServer((req, res) => {
+    const parsedUrl = parse(req.url, true);
+    handle(req, res, parsedUrl);
+  }).listen(port, (err) => {
+    if (err) throw err;
+    console.log(`> Next.js Production Server ready on port ${port}`);
   });
-}
+}).catch((err) => {
+  console.error('Failed to start Next.js server:', err);
+  process.exit(1);
+});

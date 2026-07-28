@@ -1,23 +1,21 @@
-process.env.NODE_ENV = 'production';
-const port = process.env.PORT || 3000;
-
-console.log('> Starting Next.js Production Server on port', port);
-
-// Require Next.js server
+const { createServer } = require('http');
+const { parse } = require('url');
 const next = require('next');
-const http = require('http');
 
-const app = next({ dev: false, dir: __dirname });
+const port = process.env.PORT || 3000;
+const dev = false;
+const app = next({ dev, dir: __dirname });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  http.createServer((req, res) => {
-    handle(req, res);
+  createServer((req, res) => {
+    const parsedUrl = parse(req.url, true);
+    handle(req, res, parsedUrl);
   }).listen(port, (err) => {
     if (err) throw err;
-    console.log(`> Ready on http://localhost:${port}`);
+    console.log(`> Next.js Server listening on ${port}`);
   });
 }).catch((err) => {
-  console.error('Error starting server:', err);
+  console.error('Failed to start Next.js server:', err);
   process.exit(1);
 });

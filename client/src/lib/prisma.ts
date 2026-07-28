@@ -6,6 +6,9 @@ const activeDbUrl = process.platform === 'linux'
   ? 'mysql://u571253792_cmsuser:MoazOrigin2026!@localhost:3306/u571253792_cmsdb'
   : (process.env.DATABASE_URL || 'mysql://root:root@127.0.0.1:3306/u571253792_cmsdb');
 
+// Explicitly set process.env.DATABASE_URL before PrismaClient initialization
+process.env.DATABASE_URL = activeDbUrl;
+
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({

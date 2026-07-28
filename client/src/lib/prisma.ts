@@ -2,23 +2,15 @@ import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-let dbUrl = process.env.DATABASE_URL || 'mysql://u571253792_cmsuser:Nuttertools1231231%24@localhost:3306/u571253792_cmsdb';
-
-// Force replace unescaped $ in password for Hostinger production MySQL
-if (dbUrl.includes('$@')) {
-  dbUrl = dbUrl.replace('$@', '%24@');
-}
-
-if (!dbUrl || dbUrl.includes('root:root') || process.platform === 'linux') {
-  dbUrl = 'mysql://u571253792_cmsuser:Nuttertools1231231%24@localhost:3306/u571253792_cmsdb';
-}
+const activeDbUrl = 'mysql://u571253792_cmsuser:Nuttertools1231231%24@localhost:3306/u571253792_cmsdb';
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
+    datasourceUrl: process.platform === 'linux' ? activeDbUrl : (process.env.DATABASE_URL || activeDbUrl),
     datasources: {
       db: {
-        url: dbUrl,
+        url: process.platform === 'linux' ? activeDbUrl : (process.env.DATABASE_URL || activeDbUrl),
       },
     },
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],

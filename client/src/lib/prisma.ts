@@ -6,7 +6,7 @@ let dbUrl = process.env.DATABASE_URL || '';
 
 // Fallback to Hostinger production MySQL credentials if on production server or if DATABASE_URL is invalid/empty
 if (!dbUrl || dbUrl.includes('root:root') || process.platform === 'linux') {
-  dbUrl = 'mysql://u571253792_cmsuser:Nuttertools1231231%24@127.0.0.1:3306/u571253792_cmsdb';
+  dbUrl = 'mysql://u571253792_cmsuser:Nuttertools1231231%24@localhost:3306/u571253792_cmsdb';
 }
 
 export const prisma =

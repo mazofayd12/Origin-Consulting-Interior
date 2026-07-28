@@ -1,21 +1,25 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
+const path = require('path');
+const fs = require('fs');
 
-const port = process.env.PORT || 3000;
-const dev = false;
-const app = next({ dev, dir: __dirname });
-const handle = app.getRequestHandler();
+const standaloneServer = path.join(__dirname, '.next', 'standalone', 'server.js');
 
-app.prepare().then(() => {
-  createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
-    handle(req, res, parsedUrl);
-  }).listen(port, (err) => {
-    if (err) throw err;
-    console.log(`> Next.js Server listening on ${port}`);
+if (fs.existsSync(standaloneServer)) {
+  console.log('> Loading Next.js Standalone Server from .next/standalone/server.js');
+  require(standaloneServer);
+} else {
+  console.log('> Loading Next.js Standard Server');
+  const { createServer } = require('http');
+  const { parse } = require('url');
+  const next = require('next');
+
+  const port = process.env.PORT || 3000;
+  const app = next({ dev: false, dir: __dirname });
+  const handle = app.getRequestHandler();
+
+  app.prepare().then(() => {
+    createServer((req, res) => {
+      const parsedUrl = parse(req.url, true);
+      handle(req, res, parsedUrl);
+    }).listen(port);
   });
-}).catch((err) => {
-  console.error('Failed to start Next.js server:', err);
-  process.exit(1);
-});
+}

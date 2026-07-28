@@ -2,9 +2,12 @@ import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-const rawUrl = process.env.DATABASE_URL || 'mysql://u571253792_cmsuser:Nuttertools1231231%24@localhost:3306/u571253792_cmsdb';
-let dbUrl = rawUrl.includes('$@') ? rawUrl.replace('$@', '%24@') : rawUrl;
-dbUrl = dbUrl.replace('@localhost:', '@127.0.0.1:');
+let dbUrl = process.env.DATABASE_URL || '';
+
+// Fallback to Hostinger production MySQL credentials if on production server or if DATABASE_URL is invalid/empty
+if (!dbUrl || dbUrl.includes('root:root') || dbUrl.includes('cmsuser') || process.platform === 'linux') {
+  dbUrl = 'mysql://u571253792_cmsdb:MoazOrigin2026!@127.0.0.1:3306/u571253792_cmsdb';
+}
 
 export const prisma =
   globalForPrisma.prisma ||
@@ -20,4 +23,3 @@ export const prisma =
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export default prisma;
-

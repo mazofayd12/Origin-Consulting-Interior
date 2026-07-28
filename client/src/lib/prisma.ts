@@ -7,10 +7,9 @@ const activeDbUrl = 'mysql://u571253792_cmsuser:MoazOrigin2026!@127.0.0.1:3306/u
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    datasourceUrl: process.platform === 'linux' ? activeDbUrl : (process.env.DATABASE_URL || activeDbUrl),
     datasources: {
       db: {
-        url: process.platform === 'linux' ? activeDbUrl : (process.env.DATABASE_URL || activeDbUrl),
+        url: activeDbUrl,
       },
     },
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],

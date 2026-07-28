@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 export const dynamic = 'force-dynamic';
 
@@ -198,6 +199,40 @@ CREATE TABLE IF NOT EXISTS AuditLog (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 `;
 
+export async function GET() {
+  try {
+    const passwordHash = bcrypt.hashSync('Admin123456', 10);
+
+    const u1 = await prisma.user.upsert({
+      where: { email: 'admin@origindesigneg.com' },
+      update: { passwordHash, role: 'ADMIN' },
+      create: {
+        id: 'u1',
+        email: 'admin@origindesigneg.com',
+        passwordHash,
+        fullName: 'Super Admin',
+        role: 'ADMIN',
+      },
+    });
+
+    const u2 = await prisma.user.upsert({
+      where: { email: 'm@m.com' },
+      update: { passwordHash, role: 'ADMIN' },
+      create: {
+        id: 'u2',
+        email: 'm@m.com',
+        passwordHash,
+        fullName: 'Admin Moaz',
+        role: 'ADMIN',
+      },
+    });
+
+    return NextResponse.json({ message: 'Admin users seeded & verified successfully!', users: [u1.email, u2.email] });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const statements = MIGRATION_SQL.split(';')
@@ -212,7 +247,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ message: 'Enterprise MySQL tables verified & created successfully', tablesCount: statements.length });
+    const passwordHash = bcrypt.hashSync('Admin123456', 10);
+    await prisma.user.upsert({
+      where: { email: 'admin@origindesigneg.com' },
+      update: { passwordHash, role: 'ADMIN' },
+      create: {
+        id: 'u1',
+        email: 'admin@origindesigneg.com',
+        passwordHash,
+        fullName: 'Super Admin',
+        role: 'ADMIN',
+      },
+    });
+
+    await prisma.user.upsert({
+      where: { email: 'm@m.com' },
+      update: { passwordHash, role: 'ADMIN' },
+      create: {
+        id: 'u2',
+        email: 'm@m.com',
+        passwordHash,
+        fullName: 'Admin Moaz',
+        role: 'ADMIN',
+      },
+    });
+
+    return NextResponse.json({ message: 'Enterprise MySQL tables verified & admin users seeded successfully' });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

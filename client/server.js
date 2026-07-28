@@ -1,22 +1,23 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
+process.env.NODE_ENV = 'production';
+const port = process.env.PORT || 3000;
 
-// Support Phusion Passenger, process.env.PORT socket, or fallback port 3000
-const port = typeof(PhusionPassenger) !== 'undefined' ? 'passenger' : (process.env.PORT || 3000);
-const dev = false;
-const app = next({ dev, dir: __dirname });
+console.log('> Starting Next.js Production Server on port', port);
+
+// Require Next.js server
+const next = require('next');
+const http = require('http');
+
+const app = next({ dev: false, dir: __dirname });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
-    handle(req, res, parsedUrl);
+  http.createServer((req, res) => {
+    handle(req, res);
   }).listen(port, (err) => {
     if (err) throw err;
-    console.log(`> Next.js Server listening on ${port}`);
+    console.log(`> Ready on http://localhost:${port}`);
   });
 }).catch((err) => {
-  console.error('Failed to start Next.js server:', err);
+  console.error('Error starting server:', err);
   process.exit(1);
 });

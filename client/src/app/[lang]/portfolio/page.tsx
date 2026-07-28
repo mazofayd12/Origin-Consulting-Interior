@@ -67,17 +67,20 @@ export default function PortfolioPage() {
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const res = await axios.get('/api/projects');
+        const [res, catRes] = await Promise.all([
+          axios.get('/api/projects'),
+          axios.get('/api/categories').catch(() => ({ data: [] }))
+        ]);
+
         if (res.data && res.data.length > 0) {
           setProjects(res.data);
         } else {
           setProjects(fallbackProjects);
         }
 
-        const catRes = await axios.get('/api/settings');
-        if (catRes.data?.project_categories && Array.isArray(catRes.data.project_categories) && catRes.data.project_categories.length > 0) {
-          const fetchedCats = catRes.data.project_categories.map((c: any) => ({
-            key: c.nameEn,
+        if (catRes.data && Array.isArray(catRes.data) && catRes.data.length > 0) {
+          const fetchedCats = catRes.data.map((c: any) => ({
+            key: c.slug || c.nameEn || c.id,
             labelEn: c.nameEn,
             labelAr: c.nameAr,
           }));
@@ -93,10 +96,19 @@ export default function PortfolioPage() {
     fetchProjects();
   }, []);
 
-  const filtered = projects.filter((p) => {
-    const title = lang === 'en' ? p.titleEn : p.titleAr;
-    const location = lang === 'en' ? p.locationEn : p.locationAr;
-    const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+  const filtered = projects.filter((p: any) => {
+    const title = lang === 'en' ? (p.titleEn || '') : (p.titleAr || '');
+    const location = lang === 'en' ? (p.locationEn || '') : (p.locationAr || '');
+    const pCatNameEn = p.categoryNameEn || p.category?.nameEn || p.category || '';
+    const pCatNameAr = p.categoryNameAr || p.category?.nameAr || p.category || '';
+    const pCatSlug = p.categorySlug || p.category?.slug || p.categoryId || '';
+    
+    const matchesCategory = activeCategory === 'All' || 
+      pCatNameEn === activeCategory || 
+      pCatNameAr === activeCategory || 
+      pCatSlug === activeCategory ||
+      (typeof p.category === 'string' && p.category === activeCategory);
+
     const matchesSearch = title.toLowerCase().includes(search.toLowerCase()) || location.toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });

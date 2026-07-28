@@ -13,8 +13,51 @@
 }
 
 .dark {
-  --background: #121212;
+  --background: #0B0F17;
   --foreground: #F5F5F5;
+}
+
+html.light, body.light {
+  --background: #F9FAFB;
+  --foreground: #111827;
+  background-color: #F9FAFB !important;
+  color: #111827 !important;
+}
+
+html.light .glass-panel,
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(183, 154, 91, 0.35) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+  color: #111827 !important;
+}
+
+html.light .bg-neutral-950,
+html.light .bg-neutral-900,
+html.light .bg-[#07090E],
+html.light .bg-[#0B0F17],
+html.light .bg-black {
+  background-color: #F3F4F6 !important;
+  color: #111827 !important;
+}
+
+html.light .text-white,
+html.light .text-neutral-200,
+html.light .text-neutral-300,
+html.light .text-zinc-200,
+html.light .text-zinc-100 {
+  color: #111827 !important;
+}
+
+html.light .text-neutral-400,
+html.light .text-zinc-400 {
+  color: #374151 !important;
+}
+
+html.light .border-neutral-800,
+html.light .border-neutral-900,
+html.light .border-zinc-800 {
+  border-color: #E5E7EB !important;
 }
 
 body {

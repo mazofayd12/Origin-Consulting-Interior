@@ -61,6 +61,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }`;
   };
 
+  const userRoles = (user?.role || 'ADMIN').split(',');
+  const hasRole = (allowed: string[]) => userRoles.some((r) => allowed.includes(r.trim()));
+
+  const getRequiredRolesForPath = (path: string) => {
+    if (path.includes('/admin/blog')) return ['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER', 'BLOG_WRITER'];
+    if (path.includes('/admin/projects')) return ['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER', 'PROJECTS_MANAGER'];
+    if (path.includes('/admin/inquiries') || path.includes('/admin/contact/newsletter')) return ['ADMIN', 'SUPER_ADMIN', 'INQUIRIES_MANAGER'];
+    if (
+      path.includes('/admin/content/') ||
+      path.includes('/admin/services') ||
+      path.includes('/admin/media/')
+    ) return ['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER'];
+    if (
+      path.includes('/admin/users') ||
+      path.includes('/admin/settings') ||
+      path.includes('/admin/security') ||
+      path.includes('/admin/audit-logs')
+    ) return ['ADMIN', 'SUPER_ADMIN'];
+    return null;
+  };
+
+  const requiredRoles = getRequiredRolesForPath(pathname || '');
+  const isAuthorized = !requiredRoles || hasRole(requiredRoles);
+
   return (
     <div className="min-h-screen bg-[#07090E] text-zinc-100 flex flex-col font-sans">
       {/* Top Header */}
@@ -143,137 +167,175 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
 
             {/* Website Content Group */}
-            <div className="space-y-1">
-              <button
-                onClick={() => setContentMenuOpen(!contentMenuOpen)}
-                className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
-              >
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-amber-400" />
-                  <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Website CMS</span>
-                </div>
-                {sidebarOpen && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${contentMenuOpen ? 'rotate-180' : ''}`} />}
-              </button>
-              {contentMenuOpen && (
-                <div className="space-y-1 pl-2">
-                  <Link href={`/${lang}/admin/content/home`} className={navItemClass(`/${lang}/admin/content/home`)}>
-                    <Home className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Home Builder</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/content/about`} className={navItemClass(`/${lang}/admin/content/about`)}>
-                    <Info className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>About Page</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/services`} className={navItemClass(`/${lang}/admin/services`)}>
-                    <Briefcase className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Services</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/projects`} className={navItemClass(`/${lang}/admin/projects`)}>
-                    <FolderKanban className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Projects</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/projects/categories`} className={navItemClass(`/${lang}/admin/projects/categories`)}>
-                    <Folder className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Categories</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/blog`} className={navItemClass(`/${lang}/admin/blog`)}>
-                    <FileText className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Blog & News</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/content/testimonials`} className={navItemClass(`/${lang}/admin/content/testimonials`)}>
-                    <MessageSquare className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Testimonials</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/content/clients`} className={navItemClass(`/${lang}/admin/content/clients`)}>
-                    <Award className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Clients & Partners</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/content/team`} className={navItemClass(`/${lang}/admin/content/team`)}>
-                    <Users className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Team Members</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/content/faq`} className={navItemClass(`/${lang}/admin/content/faq`)}>
-                    <HelpCircle className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>FAQ</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+            {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER', 'BLOG_WRITER', 'PROJECTS_MANAGER']) && (
+              <div className="space-y-1">
+                <button
+                  onClick={() => setContentMenuOpen(!contentMenuOpen)}
+                  className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-amber-400" />
+                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Website CMS</span>
+                  </div>
+                  {sidebarOpen && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${contentMenuOpen ? 'rotate-180' : ''}`} />}
+                </button>
+                {contentMenuOpen && (
+                  <div className="space-y-1 pl-2">
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER']) && (
+                      <Link href={`/${lang}/admin/content/home`} className={navItemClass(`/${lang}/admin/content/home`)}>
+                        <Home className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Home Builder</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER']) && (
+                      <Link href={`/${lang}/admin/content/about`} className={navItemClass(`/${lang}/admin/content/about`)}>
+                        <Info className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>About Page</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER']) && (
+                      <Link href={`/${lang}/admin/services`} className={navItemClass(`/${lang}/admin/services`)}>
+                        <Briefcase className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Services</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER', 'PROJECTS_MANAGER']) && (
+                      <Link href={`/${lang}/admin/projects`} className={navItemClass(`/${lang}/admin/projects`)}>
+                        <FolderKanban className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Projects</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER', 'PROJECTS_MANAGER']) && (
+                      <Link href={`/${lang}/admin/projects/categories`} className={navItemClass(`/${lang}/admin/projects/categories`)}>
+                        <Folder className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Categories</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER', 'BLOG_WRITER']) && (
+                      <Link href={`/${lang}/admin/blog`} className={navItemClass(`/${lang}/admin/blog`)}>
+                        <FileText className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Blog & News</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER']) && (
+                      <Link href={`/${lang}/admin/content/testimonials`} className={navItemClass(`/${lang}/admin/content/testimonials`)}>
+                        <MessageSquare className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Testimonials</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER']) && (
+                      <Link href={`/${lang}/admin/content/clients`} className={navItemClass(`/${lang}/admin/content/clients`)}>
+                        <Award className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Clients & Partners</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER']) && (
+                      <Link href={`/${lang}/admin/content/team`} className={navItemClass(`/${lang}/admin/content/team`)}>
+                        <Users className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Team Members</span>
+                      </Link>
+                    )}
+                    {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER']) && (
+                      <Link href={`/${lang}/admin/content/faq`} className={navItemClass(`/${lang}/admin/content/faq`)}>
+                        <HelpCircle className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                        <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>FAQ</span>
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Media & Forms */}
-            <div className="space-y-1">
-              <div className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Asset & Forms</span>
+            {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER', 'INQUIRIES_MANAGER']) && (
+              <div className="space-y-1">
+                <div className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Asset & Forms</span>
+                </div>
+                {hasRole(['ADMIN', 'SUPER_ADMIN', 'CONTENT_MANAGER']) && (
+                  <Link href={`/${lang}/admin/media/files`} className={navItemClass(`/${lang}/admin/media/files`)}>
+                    <Folder className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Media Library</span>
+                  </Link>
+                )}
+                {hasRole(['ADMIN', 'SUPER_ADMIN', 'INQUIRIES_MANAGER']) && (
+                  <Link href={`/${lang}/admin/inquiries`} className={navItemClass(`/${lang}/admin/inquiries`)}>
+                    <Mail className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Inquiries</span>
+                  </Link>
+                )}
+                {hasRole(['ADMIN', 'SUPER_ADMIN', 'INQUIRIES_MANAGER']) && (
+                  <Link href={`/${lang}/admin/contact/newsletter`} className={navItemClass(`/${lang}/admin/contact/newsletter`)}>
+                    <Send className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Newsletter</span>
+                  </Link>
+                )}
               </div>
-              <Link href={`/${lang}/admin/media/files`} className={navItemClass(`/${lang}/admin/media/files`)}>
-                <Folder className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Media Library</span>
-              </Link>
-              <Link href={`/${lang}/admin/inquiries`} className={navItemClass(`/${lang}/admin/inquiries`)}>
-                <Mail className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Inquiries</span>
-              </Link>
-              <Link href={`/${lang}/admin/contact/newsletter`} className={navItemClass(`/${lang}/admin/contact/newsletter`)}>
-                <Send className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Newsletter</span>
-              </Link>
-            </div>
+            )}
 
             {/* Security & Access */}
-            <div className="space-y-1">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
-              >
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-amber-400" />
-                  <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Users & RBAC</span>
-                </div>
-                {sidebarOpen && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />}
-              </button>
-              {userMenuOpen && (
-                <div className="space-y-1 pl-2">
-                  <Link href={`/${lang}/admin/users`} className={navItemClass(`/${lang}/admin/users`)}>
-                    <UserIcon className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>User List</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/users/roles`} className={navItemClass(`/${lang}/admin/users/roles`)}>
-                    <UserCheck className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Roles</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/users/permissions`} className={navItemClass(`/${lang}/admin/users/permissions`)}>
-                    <Shield className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Permissions</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+            {hasRole(['ADMIN', 'SUPER_ADMIN']) && (
+              <div className="space-y-1">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-amber-400" />
+                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Users & RBAC</span>
+                  </div>
+                  {sidebarOpen && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />}
+                </button>
+                {userMenuOpen && (
+                  <div className="space-y-1 pl-2">
+                    <Link href={`/${lang}/admin/users`} className={navItemClass(`/${lang}/admin/users`)}>
+                      <UserIcon className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                      <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>User List</span>
+                    </Link>
+                    <Link href={`/${lang}/admin/users/roles`} className={navItemClass(`/${lang}/admin/users/roles`)}>
+                      <UserCheck className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                      <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Roles</span>
+                    </Link>
+                    <Link href={`/${lang}/admin/users/permissions`} className={navItemClass(`/${lang}/admin/users/permissions`)}>
+                      <Shield className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                      <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Permissions</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* System Settings & Utilities */}
-            <div className="space-y-1">
-              <button
-                onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
-                className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
-              >
-                <div className="flex items-center gap-2">
-                  <Settings className="w-4 h-4 text-amber-400" />
-                  <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Settings</span>
-                </div>
-                {sidebarOpen && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${settingsMenuOpen ? 'rotate-180' : ''}`} />}
-              </button>
-              {settingsMenuOpen && (
-                <div className="space-y-1 pl-2">
-                  <Link href={`/${lang}/admin/settings`} className={navItemClass(`/${lang}/admin/settings`)}>
-                    <Settings className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Site Settings</span>
-                  </Link>
-                  <Link href={`/${lang}/admin/audit-logs`} className={navItemClass(`/${lang}/admin/audit-logs`)}>
-                    <History className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Audit Logs</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+            {hasRole(['ADMIN', 'SUPER_ADMIN']) && (
+              <div className="space-y-1">
+                <button
+                  onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
+                  className="w-full flex items-center justify-between px-3.5 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-amber-400" />
+                    <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Settings</span>
+                  </div>
+                  {sidebarOpen && <ChevronDown className={`w-3.5 h-3.5 transition-transform ${settingsMenuOpen ? 'rotate-180' : ''}`} />}
+                </button>
+                {settingsMenuOpen && (
+                  <div className="space-y-1 pl-2">
+                    <Link href={`/${lang}/admin/settings`} className={navItemClass(`/${lang}/admin/settings`)}>
+                      <Settings className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                      <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Site Settings</span>
+                    </Link>
+                    <Link href={`/${lang}/admin/settings/contact`} className={navItemClass(`/${lang}/admin/settings/contact`)}>
+                      <Mail className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                      <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Contact Info & Phone</span>
+                    </Link>
+                    <Link href={`/${lang}/admin/audit-logs`} className={navItemClass(`/${lang}/admin/audit-logs`)}>
+                      <History className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                      <span className={sidebarOpen ? 'block' : 'hidden md:hidden'}>Audit Logs</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="p-3 border-t border-zinc-800/80">
@@ -291,7 +353,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8 bg-[#07090E]">
-          {children}
+          {isAuthorized ? (
+            children
+          ) : (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 glass-panel border border-red-500/30 rounded-2xl bg-neutral-900/40">
+              <Shield className="w-16 h-16 text-red-500 mb-4 animate-pulse" />
+              <h2 className="text-2xl font-bold text-white mb-2">Access Restricted / غير مسموح بالوصول</h2>
+              <p className="text-sm text-zinc-400 max-w-md mb-6">
+                You do not have the required permissions to access this administrative section. Please contact your system administrator.
+              </p>
+              <Link
+                href={`/${lang}/admin/dashboard`}
+                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold rounded-xl text-sm transition-colors"
+              >
+                Return to Dashboard (العودة للرئيسية)
+              </Link>
+            </div>
+          )}
         </main>
       </div>
     </div>

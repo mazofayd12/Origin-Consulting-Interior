@@ -27,16 +27,28 @@ export async function PUT(req: NextRequest, { params }: { params: { slug: string
     if (!project) project = await prisma.project.findUnique({ where: { id: params.slug } });
     if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const { images, ...restData } = data;
+    const { images, category, categoryId, slug, ...restData } = data;
     const galleryPayload = data.gallery || data.images;
+
+    // Resolve categoryId if category string is passed
+    let validCategoryId = categoryId || project.categoryId;
+    if (category && typeof category === 'string') {
+      const existingCat = await prisma.projectCategory.findFirst({
+        where: { OR: [{ id: category }, { slug: category }, { nameEn: category }] }
+      });
+      if (existingCat) {
+        validCategoryId = existingCat.id;
+      }
+    }
 
     const updated = await prisma.project.update({
       where: { id: project.id },
       data: {
         ...restData,
-        servicesEn: data.servicesEn ? JSON.stringify(data.servicesEn) : undefined,
-        servicesAr: data.servicesAr ? JSON.stringify(data.servicesAr) : undefined,
-        gallery: galleryPayload ? JSON.stringify(galleryPayload) : undefined,
+        categoryId: validCategoryId,
+        servicesEn: data.servicesEn ? (typeof data.servicesEn === 'string' ? data.servicesEn : JSON.stringify(data.servicesEn)) : undefined,
+        servicesAr: data.servicesAr ? (typeof data.servicesAr === 'string' ? data.servicesAr : JSON.stringify(data.servicesAr)) : undefined,
+        gallery: galleryPayload ? (typeof galleryPayload === 'string' ? galleryPayload : JSON.stringify(galleryPayload)) : undefined,
       },
     });
     return NextResponse.json(updated);

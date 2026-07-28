@@ -1,15 +1,27 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/context';
 import { SEOHead } from '@/components/layout/SEOHead';
 import { Card } from '@/components/ui/Card';
 import { Star, Quote } from 'lucide-react';
+import axios from 'axios';
 
 export default function TestimonialsPage() {
   const { lang } = useI18n();
+  const [dbReviews, setDbReviews] = useState<any[]>([]);
 
-  const reviews = [
+  useEffect(() => {
+    axios.get('/api/testimonials')
+      .then((res) => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setDbReviews(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const defaultReviews = [
     {
       name: lang === 'en' ? 'Sheikh Mansoor Al-Qasimi' : 'الشيخ منصور القاسمي',
       company: lang === 'en' ? 'Al Qasimi Real Estate Holdings' : 'مجموعة القاسمي العقارية',
@@ -30,6 +42,18 @@ export default function TestimonialsPage() {
     },
   ];
 
+  const displayReviews = dbReviews.length > 0
+    ? dbReviews.map((r) => ({
+        name: r.clientName,
+        company: lang === 'en' ? (r.companyEn || r.companyAr) : (r.companyAr || r.companyEn),
+        role: lang === 'en' ? (r.positionEn || r.positionAr) : (r.positionAr || r.positionEn),
+        commentEn: r.contentEn || r.contentAr,
+        commentAr: r.contentAr || r.contentEn,
+        rating: r.rating || 5,
+        avatar: r.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+      }))
+    : defaultReviews;
+
   return (
     <>
       <SEOHead
@@ -48,7 +72,7 @@ export default function TestimonialsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {reviews.map((r, idx) => {
+          {displayReviews.map((r, idx) => {
             const comment = lang === 'en' ? r.commentEn : r.commentAr;
             return (
               <Card key={idx} className="relative flex flex-col justify-between p-8">

@@ -78,10 +78,20 @@ export const Navbar: React.FC = () => {
 
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-full text-neutral-300 hover:text-brand-gold hover:bg-white/5 transition-colors"
-            title="Toggle Dark/Light Mode"
+            className="p-2 rounded-full text-neutral-300 hover:text-brand-gold hover:bg-white/5 transition-colors flex items-center gap-1.5 text-xs font-bold border border-brand-gold/20 px-3"
+            title={theme === 'dark' ? 'Switch to Light Mode (الوضع الفاتح)' : 'Switch to Dark Mode (الوضع الداكن)'}
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-4 h-4 text-brand-gold" />
+                <span>{lang === 'en' ? 'Light' : 'فاتح'}</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 text-brand-gold" />
+                <span>{lang === 'en' ? 'Dark' : 'داكن'}</span>
+              </>
+            )}
           </button>
 
           <Link href={`/${lang}/admin/login`}>
@@ -101,6 +111,9 @@ export const Navbar: React.FC = () => {
         <div className="flex lg:hidden items-center gap-3">
           <button onClick={toggleLanguage} className="text-xs text-brand-gold font-bold px-2 py-1 border border-brand-gold/30 rounded">
             {lang === 'en' ? 'العربية' : 'EN'}
+          </button>
+          <button onClick={toggleTheme} className="p-1.5 text-brand-gold border border-brand-gold/30 rounded">
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="text-white p-2">
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

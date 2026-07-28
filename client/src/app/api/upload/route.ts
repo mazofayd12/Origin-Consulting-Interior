@@ -20,12 +20,21 @@ export async function POST(req: NextRequest) {
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const filename = `${timestamp}_${sanitizedName}`;
 
-    // Ensure public/uploads directory exists on server
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadsDir, { recursive: true });
+    // Save file to both process.cwd()/public/uploads and any standalone/parent public/uploads
+    const possibleDirs = [
+      path.join(process.cwd(), 'public', 'uploads'),
+      path.join(process.cwd(), '.next', 'standalone', 'public', 'uploads'),
+      path.join(process.cwd(), '..', 'public', 'uploads'),
+    ];
 
-    const filePath = path.join(uploadsDir, filename);
-    await writeFile(filePath, buffer);
+    for (const dir of possibleDirs) {
+      try {
+        await mkdir(dir, { recursive: true });
+        await writeFile(path.join(dir, filename), buffer);
+      } catch (err) {
+        // ignore fallback dir write error if directory path outside root
+      }
+    }
 
     const publicUrl = `/uploads/${filename}`;
     return NextResponse.json({ url: publicUrl, filename, success: true }, { status: 201 });

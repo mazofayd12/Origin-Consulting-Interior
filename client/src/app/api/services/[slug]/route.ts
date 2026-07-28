@@ -2,22 +2,44 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
-    let s = await prisma.service.findUnique({ where: { slug: params.slug } });
-    if (!s) s = await prisma.service.findUnique({ where: { id: params.slug } });
+    const raw = params.slug;
+    const decoded = decodeURIComponent(raw);
 
-    if (!s) return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+    const safeParse = (val: any) => {
+      if (!val) return [];
+      try { return typeof val === 'string' ? JSON.parse(val) : val; }
+      catch { return [val]; }
+    };
+
+    let s = await prisma.service.findFirst({
+      where: {
+        OR: [
+          { id: raw },
+          { id: decoded },
+          { slug: raw },
+          { slug: decoded },
+          { titleEn: decoded },
+          { titleAr: decoded },
+        ],
+      },
+    });
+
+    if (!s) {
+      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+    }
 
     return NextResponse.json({
       ...s,
-      benefitsEn: JSON.parse(s.benefitsEn || '[]'),
-      benefitsAr: JSON.parse(s.benefitsAr || '[]'),
-      processEn: JSON.parse(s.processEn || '[]'),
-      processAr: JSON.parse(s.processAr || '[]'),
-      faqEn: JSON.parse(s.faqEn || '[]'),
-      faqAr: JSON.parse(s.faqAr || '[]'),
-      gallery: JSON.parse(s.gallery || '[]'),
+      benefitsEn: safeParse(s.benefitsEn),
+      benefitsAr: safeParse(s.benefitsAr),
+      processEn: safeParse(s.processEn),
+      processAr: safeParse(s.processAr),
+      faqEn: safeParse(s.faqEn),
+      faqAr: safeParse(s.faqAr),
+      gallery: safeParse(s.gallery),
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -27,16 +49,29 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
 export async function PUT(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
     const data = await req.json();
+    const raw = params.slug;
+    const decoded = decodeURIComponent(raw);
 
-    let s = await prisma.service.findUnique({ where: { slug: params.slug } });
-    if (!s) s = await prisma.service.findUnique({ where: { id: params.slug } });
+    let s = await prisma.service.findFirst({
+      where: {
+        OR: [
+          { id: raw },
+          { id: decoded },
+          { slug: raw },
+          { slug: decoded },
+        ],
+      },
+    });
 
     if (!s) return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+
+    const titleClean = (data.titleEn || data.titleAr || 'service').toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const finalSlug = data.slug && data.slug.trim().length > 0 ? data.slug.trim() : (s.slug || titleClean || `service-${Date.now()}`);
 
     const updated = await prisma.service.update({
       where: { id: s.id },
       data: {
-        slug: data.slug !== undefined ? data.slug : s.slug,
+        slug: finalSlug,
         titleEn: data.titleEn !== undefined ? data.titleEn : s.titleEn,
         titleAr: data.titleAr !== undefined ? data.titleAr : s.titleAr,
         subtitleEn: data.subtitleEn !== undefined ? data.subtitleEn : s.subtitleEn,
@@ -62,8 +97,19 @@ export async function PUT(req: NextRequest, { params }: { params: { slug: string
 
 export async function DELETE(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
-    let s = await prisma.service.findUnique({ where: { slug: params.slug } });
-    if (!s) s = await prisma.service.findUnique({ where: { id: params.slug } });
+    const raw = params.slug;
+    const decoded = decodeURIComponent(raw);
+
+    let s = await prisma.service.findFirst({
+      where: {
+        OR: [
+          { id: raw },
+          { id: decoded },
+          { slug: raw },
+          { slug: decoded },
+        ],
+      },
+    });
 
     if (!s) return NextResponse.json({ error: 'Service not found' }, { status: 404 });
 

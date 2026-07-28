@@ -15,8 +15,8 @@ export default function AdminLoginPage() {
   const lang = (params?.lang as string) || 'en';
   const { login } = useAuth();
 
-  const [email, setEmail] = useState('admin@origin-consulting.com');
-  const [password, setPassword] = useState('Admin@Origin2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

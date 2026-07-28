@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
@@ -12,10 +12,26 @@ import axios from 'axios';
 export default function ManageTeamPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [team, setTeam] = useState([
-    { id: '1', name: 'Alexander Wright', role: 'Principal Design Director', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' },
-    { id: '2', name: 'Eng. Sarah Al-Hassan', role: 'Director of MEP Engineering', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80' },
-  ]);
+  const [team, setTeam] = useState<any[]>([]);
+
+  const fetchTeam = () => {
+    axios.get('/api/team')
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setTeam(res.data.map((item: any) => ({
+            id: item.id,
+            name: item.nameEn || item.nameAr,
+            role: item.roleEn || item.roleAr,
+            image: item.imageUrl || '/images/sample1.jpg',
+          })));
+        }
+      })
+      .catch((err) => console.error('Failed to fetch team', err));
+  };
+
+  useEffect(() => {
+    fetchTeam();
+  }, []);
 
   const [form, setForm] = useState({ name: '', role: '', image: '' });
 
@@ -41,15 +57,32 @@ export default function ManageTeamPage() {
     }
   };
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTeam([...team, { ...form, id: String(Date.now()) }]);
-    setIsModalOpen(false);
-    setForm({ name: '', role: '', image: '' });
+    try {
+      await axios.post('/api/team', {
+        nameEn: form.name,
+        nameAr: form.name,
+        roleEn: form.role,
+        roleAr: form.role,
+        imageUrl: form.image,
+      });
+      setIsModalOpen(false);
+      setForm({ name: '', role: '', image: '' });
+      fetchTeam();
+    } catch (err: any) {
+      alert('Failed to save team member: ' + (err.response?.data?.error || err.message));
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setTeam(team.filter((t) => t.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this team member?')) return;
+    try {
+      await axios.delete(`/api/team?id=${id}`);
+      fetchTeam();
+    } catch (err: any) {
+      alert('Failed to delete team member: ' + (err.response?.data?.error || err.message));
+    }
   };
 
   return (

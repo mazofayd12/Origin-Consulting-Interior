@@ -18,16 +18,37 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
+    const saved = typeof window !== 'undefined' ? (localStorage.getItem('origin_theme') as Theme) : null;
+    if (saved === 'light' || saved === 'dark') {
+      setTheme(saved);
+    }
+  }, []);
+
+  useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
     if (theme === 'dark') {
       root.classList.add('dark');
+      root.classList.remove('light');
+      if (body) {
+        body.classList.add('dark');
+        body.classList.remove('light');
+      }
     } else {
+      root.classList.add('light');
       root.classList.remove('dark');
+      if (body) {
+        body.classList.add('light');
+        body.classList.remove('dark');
+      }
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('origin_theme', theme);
     }
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   return (

@@ -1,13 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useI18n } from '@/i18n/context';
 import { SEOHead } from '@/components/layout/SEOHead';
 import { Card } from '@/components/ui/Card';
 import { Target, Eye, Gem } from 'lucide-react';
+import axios from 'axios';
 
 export default function AboutPage() {
   const { lang, t } = useI18n();
+  const [dbTeam, setDbTeam] = useState<any[]>([]);
+
+  useEffect(() => {
+    axios.get('/api/team')
+      .then((res) => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setDbTeam(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const timeline = [
     {
@@ -32,7 +44,7 @@ export default function AboutPage() {
     },
   ];
 
-  const team = [
+  const defaultTeam = [
     {
       name: lang === 'en' ? 'Alexander Wright' : 'ألكسندر رايت',
       role: lang === 'en' ? 'Principal Design Director' : 'مدير التصميم الرئيسي',
@@ -49,6 +61,14 @@ export default function AboutPage() {
       image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
     },
   ];
+
+  const displayTeam = dbTeam.length > 0
+    ? dbTeam.map((m) => ({
+        name: lang === 'en' ? (m.nameEn || m.nameAr) : (m.nameAr || m.nameEn),
+        role: lang === 'en' ? (m.roleEn || m.roleAr) : (m.roleAr || m.roleEn),
+        image: m.imageUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+      }))
+    : defaultTeam;
 
   return (
     <>
@@ -111,7 +131,7 @@ export default function AboutPage() {
             {lang === 'en' ? 'Executive Leadership' : 'الفريق التنفيذي والإداري'}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {team.map((m, idx) => (
+            {displayTeam.map((m, idx) => (
               <Card key={idx} className="text-center">
                 <img
                   src={m.image}

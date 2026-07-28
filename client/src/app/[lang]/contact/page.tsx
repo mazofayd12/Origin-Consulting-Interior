@@ -29,6 +29,25 @@ export default function ContactPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [contactInfo, setContactInfo] = useState({
+    email: 'info@origin-consulting.com',
+    phoneDubai: '+971 4 800 67444',
+    phoneRiyadh: '+966 11 400 9900',
+    whatsappNumber: '971480067444',
+    addressDubai: 'Dubai Marina Plaza, Suite 2804, Dubai, UAE',
+    addressRiyadh: 'King Fahd Road, KAFD Tower 12, Riyadh, KSA',
+  });
+
+  React.useEffect(() => {
+    axios.get('/api/settings')
+      .then((res) => {
+        if (res.data?.contact) {
+          setContactInfo((prev) => ({ ...prev, ...res.data.contact }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -145,7 +164,7 @@ export default function ContactPage() {
                 <MapPin className="w-6 h-6 text-brand-gold flex-shrink-0 mt-1" />
                 <div>
                   <h4 className="text-white font-bold">{lang === 'en' ? 'Dubai Head Atelier' : 'المقر الرئيسي دبي'}</h4>
-                  <p className="text-neutral-400 text-sm mt-1">{lang === 'en' ? 'Dubai Marina Plaza, Suite 2804, Dubai, UAE' : 'دبي مارينا بلازا، جناح 2804، دبي، الإمارات'}</p>
+                  <p className="text-neutral-400 text-sm mt-1">{contactInfo.addressDubai}</p>
                 </div>
               </div>
 
@@ -153,22 +172,23 @@ export default function ContactPage() {
                 <MapPin className="w-6 h-6 text-brand-gold flex-shrink-0 mt-1" />
                 <div>
                   <h4 className="text-white font-bold">{lang === 'en' ? 'Riyadh Regional Office' : 'المكتب الإقليمي الرياض'}</h4>
-                  <p className="text-neutral-400 text-sm mt-1">{lang === 'en' ? 'KAFD Tower 12, Level 18, Riyadh, KSA' : 'مركز كافد برج 12، الطابق 18، الرياض، السعودية'}</p>
+                  <p className="text-neutral-400 text-sm mt-1">{contactInfo.addressRiyadh}</p>
                 </div>
               </div>
 
               <div className="glass-panel p-6 rounded-lg flex items-start gap-4">
                 <Phone className="w-6 h-6 text-brand-gold flex-shrink-0 mt-1" />
                 <div>
-                  <h4 className="text-white font-bold">{lang === 'en' ? 'Direct Phone Hotline' : 'الخط المباشر'}</h4>
-                  <p className="text-neutral-400 text-sm mt-1">+971 4 800 67444 | +966 11 400 9900</p>
+                  <h4 className="text-white font-bold">{lang === 'en' ? 'Direct Phone Hotline & Email' : 'الخط المباشر والبريد الإلكتروني'}</h4>
+                  <p className="text-neutral-400 text-sm mt-1">{contactInfo.phoneDubai} | {contactInfo.phoneRiyadh}</p>
+                  <p className="text-brand-gold text-xs font-mono mt-1">{contactInfo.email}</p>
                 </div>
               </div>
             </div>
 
             {/* Direct WhatsApp Chat Trigger */}
             <a
-              href="https://wa.me/971480067444?text=Hello%20Origin%20Consulting,%20I%20would%20like%20to%20discuss%20a%20new%20project."
+              href={`https://wa.me/${contactInfo.whatsappNumber.replace(/[^\d]/g, '')}?text=Hello%20Origin%20Consulting,%20I%20would%20like%20to%20discuss%20a%20new%20project.`}
               target="_blank"
               rel="noreferrer"
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-5 rounded-lg flex items-center justify-center gap-3 transition-colors shadow-luxury"

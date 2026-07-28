@@ -1,36 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Star, Plus, Trash } from 'lucide-react';
+import axios from 'axios';
 
 export default function ManageTestimonialsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [reviews, setReviews] = useState([
-    {
-      id: '1',
-      clientName: 'Sheikh Mansoor Al-Qasimi',
-      company: 'Al Qasimi Real Estate Holdings',
-      comment: 'Origin Consulting Interior transformed our flagship luxury tower into an architectural masterpiece.',
-      rating: 5,
-    },
-  ]);
+  const [reviews, setReviews] = useState<any[]>([]);
+
+  const fetchReviews = () => {
+    axios.get('/api/testimonials')
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setReviews(res.data.map((item: any) => ({
+            id: item.id,
+            clientName: item.clientName,
+            company: item.companyEn || item.companyAr || '',
+            comment: item.contentEn || item.contentAr || '',
+            rating: item.rating || 5,
+          })));
+        }
+      })
+      .catch((err) => console.error('Failed to fetch testimonials', err));
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
 
   const [form, setForm] = useState({ clientName: '', company: '', comment: '', rating: 5 });
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    setReviews([...reviews, { ...form, id: String(Date.now()) }]);
-    setIsModalOpen(false);
-    setForm({ clientName: '', company: '', comment: '', rating: 5 });
+    try {
+      await axios.post('/api/testimonials', form);
+      setIsModalOpen(false);
+      setForm({ clientName: '', company: '', comment: '', rating: 5 });
+      fetchReviews();
+    } catch (err: any) {
+      alert('Failed to save testimonial: ' + (err.response?.data?.error || err.message));
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setReviews(reviews.filter((r) => r.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this testimonial?')) return;
+    try {
+      await axios.delete(`/api/testimonials?id=${id}`);
+      fetchReviews();
+    } catch (err: any) {
+      alert('Failed to delete testimonial: ' + (err.response?.data?.error || err.message));
+    }
   };
 
   return (

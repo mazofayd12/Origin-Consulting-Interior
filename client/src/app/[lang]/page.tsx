@@ -21,6 +21,7 @@ import {
   Globe,
   Sparkles,
 } from 'lucide-react';
+import axios from 'axios';
 
 /* ═══════════════════════════════════════════════════════════════
    ANIMATED COUNTER HOOK
@@ -420,7 +421,64 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
 
-  const services = [
+  const [heroData, setHeroData] = useState({
+    headlineEn: 'Designing Spaces. Creating Experiences.',
+    headlineAr: 'تصميم المساحات. صناعة التجارب.',
+    subtitleEn: 'Origin Consulting Interior delivers ultra-luxury Architecture, Interior Design, MEP Engineering, and Project Management.',
+    subtitleAr: 'تقدم أوريجين للإستشارات تصاميم معمارية وفخامة داخلية وهندسة كهروميكانيكية وإنشائية وإدارة مشاريع فائقة الدقة.',
+    videoUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90',
+  });
+
+  const [aboutPreview, setAboutPreview] = useState({
+    titleEn: 'Crafting Architectural Excellence Since 2011',
+    titleAr: 'صناعة التتميز المعماري منذ 2011',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
+  });
+
+  const [beforeAfter, setBeforeAfter] = useState({
+    beforeImage: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80',
+    afterImage: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80',
+    beforeLabelEn: '3D Concept',
+    afterLabelEn: 'Final Execution',
+  });
+
+  const [servicesHeader, setServicesHeader] = useState({
+    titleEn: 'Comprehensive Engineering & Design Solutions',
+    titleAr: 'حلول هندسية وتصميمية شاملة',
+    subtitleEn: 'Our Disciplines',
+    subtitleAr: 'تخصصاتنا',
+  });
+
+  const [dbServices, setDbServices] = useState<any[]>([]);
+
+  useEffect(() => {
+    axios.get('/api/settings')
+      .then((res) => {
+        if (res.data?.homepage_hero) {
+          setHeroData((prev) => ({ ...prev, ...res.data.homepage_hero }));
+        }
+        if (res.data?.about_preview) {
+          setAboutPreview((prev) => ({ ...prev, ...res.data.about_preview }));
+        }
+        if (res.data?.before_after) {
+          setBeforeAfter((prev) => ({ ...prev, ...res.data.before_after }));
+        }
+        if (res.data?.services_section) {
+          setServicesHeader((prev) => ({ ...prev, ...res.data.services_section }));
+        }
+      })
+      .catch(() => {});
+
+    axios.get('/api/services')
+      .then((res) => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setDbServices(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const defaultServices = [
     {
       slug: 'interior-design',
       title: lang === 'en' ? 'Interior Design' : 'التصميم الداخلي',
@@ -470,6 +528,17 @@ export default function HomePage() {
       icon: <Sparkles className="w-6 h-6" />,
     },
   ];
+
+  const iconsList = [<Palette className="w-6 h-6" />, <Building2 className="w-6 h-6" />, <Wrench className="w-6 h-6" />, <Users className="w-6 h-6" />, <Globe className="w-6 h-6" />, <Sparkles className="w-6 h-6" />];
+
+  const displayServices = dbServices.length > 0
+    ? dbServices.map((s, i) => ({
+        slug: s.slug && s.slug.trim().length > 0 ? s.slug : s.id,
+        title: lang === 'en' ? (s.titleEn || s.titleAr) : (s.titleAr || s.titleEn),
+        desc: lang === 'en' ? (s.subtitleEn || s.descEn) : (s.subtitleAr || s.descAr),
+        icon: iconsList[i % iconsList.length],
+      }))
+    : defaultServices;
 
   const featuredProjects = [
     {
@@ -532,21 +601,26 @@ export default function HomePage() {
           SECTION 1: CINEMATIC HERO
           ═══════════════════════════════════════════════════════════ */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Parallax Video Background */}
+        {/* Parallax Video/Image Background */}
         <motion.div className="absolute inset-0" style={{ y: heroY, scale: heroScale }}>
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90"
-            className="w-full h-full object-cover"
-          >
-            <source
-              src="https://cdn.coverr.co/videos/coverr-an-aerial-view-of-a-city-1573/1080p.mp4"
-              type="video/mp4"
+          {heroData.videoUrl.endsWith('.mp4') || heroData.videoUrl.endsWith('.webm') ? (
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90"
+              className="w-full h-full object-cover"
+            >
+              <source src={heroData.videoUrl} type="video/mp4" />
+            </video>
+          ) : (
+            <img
+              src={heroData.videoUrl || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90"}
+              alt="Hero Backdrop"
+              className="w-full h-full object-cover"
             />
-          </video>
+          )}
         </motion.div>
 
         {/* Cinematic Gradient Overlay */}
@@ -584,17 +658,9 @@ export default function HomePage() {
             className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white leading-[0.95] font-poppins"
           >
             {lang === 'en' ? (
-              <>
-                Designing Spaces.
-                <br />
-                <span className="gold-shimmer-text">Creating Experiences.</span>
-              </>
+              <span className="gold-shimmer-text">{heroData.headlineEn}</span>
             ) : (
-              <>
-                نُصمم المساحات.
-                <br />
-                <span className="gold-shimmer-text">نصنع التجارب.</span>
-              </>
+              <span className="gold-shimmer-text">{heroData.headlineAr}</span>
             )}
           </motion.h1>
 
@@ -605,9 +671,7 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="mt-8 text-lg sm:text-xl text-neutral-300 max-w-3xl leading-relaxed font-light"
           >
-            {lang === 'en'
-              ? 'Pioneering luxury architecture, interior design, and multi-disciplinary engineering across Dubai, Riyadh, and global luxury markets.'
-              : 'رواد العمارة الفاخرة والتصميم الداخلي والهندسة المتكاملة عبر دبي والرياض والأسواق الدولية.'}
+            {lang === 'en' ? heroData.subtitleEn : heroData.subtitleAr}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -728,7 +792,7 @@ export default function HomePage() {
             >
               <div className="w-full h-[550px] rounded-xl overflow-hidden border border-brand-gold/20 shadow-luxury">
                 <img
-                  src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80"
+                  src={aboutPreview.image || "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80"}
                   alt="Origin Architecture Studio"
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -767,15 +831,15 @@ export default function HomePage() {
           <div className="text-center max-w-3xl mx-auto mb-20">
             <div className="luxury-line mx-auto mb-6" />
             <span className="text-xs uppercase tracking-[0.3em] text-brand-gold font-bold">
-              {lang === 'en' ? 'Our Disciplines' : 'تخصصاتنا'}
+              {lang === 'en' ? servicesHeader.subtitleEn : servicesHeader.subtitleAr}
             </span>
             <h2 className="text-4xl sm:text-5xl font-black text-white mt-4">
-              {lang === 'en' ? 'Comprehensive Engineering & Design Solutions' : 'حلول هندسية وتصميمية شاملة'}
+              {lang === 'en' ? servicesHeader.titleEn : servicesHeader.titleAr}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((s, idx) => (
+            {displayServices.map((s, idx) => (
               <ServiceCard
                 key={idx}
                 icon={s.icon}
@@ -834,8 +898,8 @@ export default function HomePage() {
             </p>
           </div>
           <ComparisonSlider
-            beforeSrc="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80"
-            afterSrc="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80"
+            beforeSrc={beforeAfter.beforeImage || "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=80"}
+            afterSrc={beforeAfter.afterImage || "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80"}
             beforeLabel={lang === 'en' ? '3D Concept' : 'المفهوم ثلاثي الأبعاد'}
             afterLabel={lang === 'en' ? 'Final Execution' : 'التنفيذ النهائي'}
           />

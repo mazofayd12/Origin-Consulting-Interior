@@ -428,6 +428,7 @@ export default function HomePage() {
     subtitleAr: 'تقدم أوريجين للإستشارات تصاميم معمارية وفخامة داخلية وهندسة كهروميكانيكية وإنشائية وإدارة مشاريع فائقة الدقة.',
     videoUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90',
     showOverlay: true,
+    mobileVideoFit: 'cover',
   });
 
   const [aboutPreview, setAboutPreview] = useState({
@@ -603,15 +604,20 @@ export default function HomePage() {
           ═══════════════════════════════════════════════════════════ */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Parallax Video/Image Background */}
-        <motion.div className="absolute inset-0" style={{ y: heroY, scale: heroScale }}>
+        <motion.div className="absolute inset-0 bg-neutral-950" style={{ y: heroY, scale: heroScale }}>
           {heroData.videoUrl.endsWith('.mp4') || heroData.videoUrl.endsWith('.webm') ? (
             <video
               autoPlay
               muted
               loop
               playsInline
-              poster="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90"
-              className="w-full h-full object-cover"
+              className={`w-full h-full bg-neutral-950 ${
+                heroData.mobileVideoFit === 'contain'
+                  ? 'max-sm:object-contain object-cover'
+                  : heroData.mobileVideoFit === 'fill'
+                  ? 'max-sm:object-fill object-cover'
+                  : 'object-cover'
+              }`}
             >
               <source src={heroData.videoUrl} type="video/mp4" />
             </video>
@@ -619,7 +625,13 @@ export default function HomePage() {
             <img
               src={heroData.videoUrl || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90"}
               alt="Hero Backdrop"
-              className="w-full h-full object-cover"
+              className={`w-full h-full bg-neutral-950 ${
+                heroData.mobileVideoFit === 'contain'
+                  ? 'max-sm:object-contain object-cover'
+                  : heroData.mobileVideoFit === 'fill'
+                  ? 'max-sm:object-fill object-cover'
+                  : 'object-cover'
+              }`}
             />
           )}
         </motion.div>

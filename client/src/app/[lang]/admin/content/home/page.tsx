@@ -15,6 +15,7 @@ export default function ManageHomePageContent() {
   const [uploadingBefore, setUploadingBefore] = useState(false);
   const [uploadingAfter, setUploadingAfter] = useState(false);
 
+  const [loadingSettings, setLoadingSettings] = useState(true);
   const [hero, setHero] = useState({
     headlineEn: 'Designing Spaces. Creating Experiences.',
     headlineAr: 'تصميم المساحات. صناعة التجارب.',
@@ -22,6 +23,7 @@ export default function ManageHomePageContent() {
     subtitleAr: 'تقدم أوريجين للإستشارات تصاميم معمارية وفخامة داخلية وهندسة كهروميكانيكية وإنشائية وإدارة مشاريع فائقة الدقة.',
     videoUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90',
     showOverlay: true,
+    mobileVideoFit: 'cover',
   });
 
   const [aboutPreview, setAboutPreview] = useState({
@@ -45,6 +47,7 @@ export default function ManageHomePageContent() {
   });
 
   useEffect(() => {
+    setLoadingSettings(true);
     axios.get('/api/settings')
       .then((res) => {
         if (res.data?.homepage_hero) {
@@ -60,7 +63,8 @@ export default function ManageHomePageContent() {
           setServicesHeader((prev) => ({ ...prev, ...res.data.services_section }));
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingSettings(false));
   }, []);
 
   const uploadFile = async (file: File, setter: (url: string) => void, setLoadingState: (val: boolean) => void) => {
@@ -112,7 +116,13 @@ export default function ManageHomePageContent() {
 
         {saved && <Alert type="success" message="Homepage content & section images updated successfully." />}
 
-        <form onSubmit={handleSave} className="space-y-6">
+        {loadingSettings ? (
+          <div className="glass-panel p-12 rounded-lg border border-neutral-800 flex items-center justify-center gap-3 text-amber-400">
+            <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
+            <span className="text-sm font-medium text-neutral-300">Loading homepage settings... (جاري تحميل البيانات)</span>
+          </div>
+        ) : (
+          <form onSubmit={handleSave} className="space-y-6">
           {/* Section 1: Hero Section */}
           <div className="glass-panel p-8 rounded-lg border border-brand-gold/30 space-y-6">
             <h3 className="text-xl font-bold text-amber-400 border-b border-neutral-800 pb-2 flex items-center gap-2">
@@ -179,6 +189,62 @@ export default function ManageHomePageContent() {
                 />
                 <div className="w-11 h-6 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
               </label>
+            </div>
+
+            {/* Mobile Video Fit Control */}
+            <div className="pt-4 border-t border-neutral-800 space-y-2">
+              <label className="text-sm font-bold text-amber-400">
+                Mobile Video Display Fit (طريقة عرض وحجم الفيديو على الموبايل والشاشات الصغيرة)
+              </label>
+              <p className="text-xs text-neutral-400">
+                اختر طريقة ملء الفيديو على الهواتف: Cover / Fill لملء الشاشة بالكامل، أو Horizontal Contain لعرض الفيديو بأبعاده الأفقية الأصلية.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <label className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${hero.mobileVideoFit === 'cover' || !hero.mobileVideoFit ? 'border-amber-500 bg-amber-500/10 text-white' : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700'}`}>
+                  <input
+                    type="radio"
+                    name="mobileVideoFit"
+                    value="cover"
+                    checked={hero.mobileVideoFit === 'cover' || !hero.mobileVideoFit}
+                    onChange={() => setHero({ ...hero, mobileVideoFit: 'cover' })}
+                    className="accent-amber-500"
+                  />
+                  <div>
+                    <div className="text-xs font-bold">Full Screen Cover (Fill)</div>
+                    <div className="text-[10px] opacity-70">ملء الشاشة بالكامل على الموبايل</div>
+                  </div>
+                </label>
+
+                <label className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${hero.mobileVideoFit === 'contain' ? 'border-amber-500 bg-amber-500/10 text-white' : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700'}`}>
+                  <input
+                    type="radio"
+                    name="mobileVideoFit"
+                    value="contain"
+                    checked={hero.mobileVideoFit === 'contain'}
+                    onChange={() => setHero({ ...hero, mobileVideoFit: 'contain' })}
+                    className="accent-amber-500"
+                  />
+                  <div>
+                    <div className="text-xs font-bold">Horizontal Contain</div>
+                    <div className="text-[10px] opacity-70">عرض أفقي كامل بأبعاد الفيديوالأصلية</div>
+                  </div>
+                </label>
+
+                <label className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${hero.mobileVideoFit === 'fill' ? 'border-amber-500 bg-amber-500/10 text-white' : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-700'}`}>
+                  <input
+                    type="radio"
+                    name="mobileVideoFit"
+                    value="fill"
+                    checked={hero.mobileVideoFit === 'fill'}
+                    onChange={() => setHero({ ...hero, mobileVideoFit: 'fill' })}
+                    className="accent-amber-500"
+                  />
+                  <div>
+                    <div className="text-xs font-bold">Stretch Fill</div>
+                    <div className="text-[10px] opacity-70">تمدد ملء الإطار المباشر</div>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -263,6 +329,7 @@ export default function ManageHomePageContent() {
             Save All Homepage Sections & Photos
           </Button>
         </form>
+        )}
       </div>
     </div>
   );

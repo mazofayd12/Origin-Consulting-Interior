@@ -421,6 +421,7 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
 
+  const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
   const [heroData, setHeroData] = useState({
     headlineEn: 'Designing Spaces. Creating Experiences.',
     headlineAr: 'تصميم المساحات. صناعة التجارب.',
@@ -469,7 +470,8 @@ export default function HomePage() {
           setServicesHeader((prev) => ({ ...prev, ...res.data.services_section }));
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setIsSettingsLoaded(true));
 
     axios.get('/api/services')
       .then((res) => {
@@ -604,20 +606,21 @@ export default function HomePage() {
           ═══════════════════════════════════════════════════════════ */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Parallax Video/Image Background */}
-        <motion.div className="absolute inset-0 bg-neutral-950" style={{ y: heroY, scale: heroScale }}>
-          {heroData.videoUrl.endsWith('.mp4') || heroData.videoUrl.endsWith('.webm') ? (
+        <motion.div className="absolute inset-0 bg-neutral-950 w-full h-full" style={{ y: heroY, scale: heroScale }}>
+          {!isSettingsLoaded ? (
+            <div className="w-full h-full bg-neutral-950" />
+          ) : heroData.videoUrl.endsWith('.mp4') || heroData.videoUrl.endsWith('.webm') ? (
             <video
               autoPlay
               muted
               loop
               playsInline
-              className={`w-full h-full bg-neutral-950 ${
-                heroData.mobileVideoFit === 'contain'
-                  ? 'max-sm:object-contain object-cover'
-                  : heroData.mobileVideoFit === 'fill'
-                  ? 'max-sm:object-fill object-cover'
-                  : 'object-cover'
-              }`}
+              className="w-full h-full min-w-full min-h-full bg-neutral-950"
+              style={{
+                objectFit: (heroData.mobileVideoFit as any) === 'contain' ? 'contain' : (heroData.mobileVideoFit as any) === 'fill' ? 'fill' : 'cover',
+                width: '100%',
+                height: '100%',
+              }}
             >
               <source src={heroData.videoUrl} type="video/mp4" />
             </video>
@@ -625,13 +628,12 @@ export default function HomePage() {
             <img
               src={heroData.videoUrl || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90"}
               alt="Hero Backdrop"
-              className={`w-full h-full bg-neutral-950 ${
-                heroData.mobileVideoFit === 'contain'
-                  ? 'max-sm:object-contain object-cover'
-                  : heroData.mobileVideoFit === 'fill'
-                  ? 'max-sm:object-fill object-cover'
-                  : 'object-cover'
-              }`}
+              className="w-full h-full min-w-full min-h-full bg-neutral-950"
+              style={{
+                objectFit: (heroData.mobileVideoFit as any) === 'contain' ? 'contain' : (heroData.mobileVideoFit as any) === 'fill' ? 'fill' : 'cover',
+                width: '100%',
+                height: '100%',
+              }}
             />
           )}
         </motion.div>
@@ -648,6 +650,7 @@ export default function HomePage() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-brand-gold/5 blur-[120px] pointer-events-none z-[2]" />
 
         {/* Hero Content */}
+        {isSettingsLoaded && (
         <motion.div
           style={{ opacity: heroOpacity }}
           className="relative z-10 max-w-6xl mx-auto px-6 text-center flex flex-col items-center"
@@ -726,6 +729,7 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
         </motion.div>
+        )}
       </section>
 
       {/* ═══════════════════════════════════════════════════════════

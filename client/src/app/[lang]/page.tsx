@@ -427,6 +427,7 @@ export default function HomePage() {
     subtitleEn: 'Origin Consulting Interior delivers ultra-luxury Architecture, Interior Design, MEP Engineering, and Project Management.',
     subtitleAr: 'تقدم أوريجين للإستشارات تصاميم معمارية وفخامة داخلية وهندسة كهروميكانيكية وإنشائية وإدارة مشاريع فائقة الدقة.',
     videoUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90',
+    showOverlay: true,
   });
 
   const [aboutPreview, setAboutPreview] = useState({
@@ -624,7 +625,9 @@ export default function HomePage() {
         </motion.div>
 
         {/* Cinematic Gradient Overlay */}
-        <div className="hero-video-overlay absolute inset-0 z-[1]" />
+        {heroData.showOverlay !== false && (
+          <div className="hero-video-overlay absolute inset-0 z-[1]" />
+        )}
 
         {/* Floating Particles */}
         <FloatingParticles />

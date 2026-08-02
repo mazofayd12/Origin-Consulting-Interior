@@ -21,6 +21,7 @@ export default function ManageHomePageContent() {
     subtitleEn: 'Origin Consulting Interior delivers ultra-luxury Architecture, Interior Design, MEP Engineering, and Project Management.',
     subtitleAr: 'تقدم أوريجين للإستشارات تصاميم معمارية وفخامة داخلية وهندسة كهروميكانيكية وإنشائية وإدارة مشاريع فائقة الدقة.',
     videoUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90',
+    showOverlay: true,
   });
 
   const [aboutPreview, setAboutPreview] = useState({
@@ -155,6 +156,28 @@ export default function ManageHomePageContent() {
                     if (e.target.files?.[0]) uploadFile(e.target.files[0], (url) => setHero({ ...hero, videoUrl: url }), setUploadingHero);
                   }}
                 />
+              </label>
+            </div>
+
+            {/* Hero Overlay Toggle Control */}
+            <div className="pt-4 border-t border-neutral-800 flex items-center justify-between">
+              <div className="space-y-0.5">
+                <label htmlFor="heroOverlayToggle" className="text-sm font-bold text-amber-400 cursor-pointer">
+                  Hero Dark Overlay Layer (الطبقة الداكنة الشفافة فوق الهيرو)
+                </label>
+                <p className="text-xs text-neutral-400">
+                  تفعيل أو إيقاف طبقة التغبيش/الظل الشفافة التي تظهر فوق فيديو وصورة الهيرو الرئيسية (hero-video-overlay)
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  id="heroOverlayToggle"
+                  type="checkbox"
+                  checked={hero.showOverlay !== false}
+                  onChange={(e) => setHero({ ...hero, showOverlay: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
               </label>
             </div>
           </div>

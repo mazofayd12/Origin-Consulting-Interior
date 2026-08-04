@@ -679,27 +679,6 @@ export default function HomePage() {
             {lang === 'en' ? heroData.subtitleEn : heroData.subtitleAr}
           </motion.p>
 
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="mt-12 flex flex-wrap justify-center gap-5"
-          >
-            <Link href={`/${lang}/portfolio`}>
-              <Button size="lg" variant="gold" className="btn-premium gap-3 text-sm">
-                <span>{lang === 'en' ? 'Explore Our Portfolio' : 'استكشف أعمالنا'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-            <Link href={`/${lang}/contact`}>
-              <Button size="lg" variant="outline" className="gap-3 text-sm">
-                <Play className="w-4 h-4" />
-                <span>{lang === 'en' ? 'Schedule Consultation' : 'حجز استشارة'}</span>
-              </Button>
-            </Link>
-          </motion.div>
-
           {/* Scroll indicator */}
           <motion.div
             initial={{ opacity: 0 }}

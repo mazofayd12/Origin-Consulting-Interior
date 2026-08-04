@@ -655,19 +655,6 @@ export default function HomePage() {
           style={{ opacity: heroOpacity }}
           className="relative z-10 max-w-6xl mx-auto px-6 text-center flex flex-col items-center"
         >
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-            className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full glass-panel border border-brand-gold/30 text-brand-gold mb-8"
-          >
-            <Compass className="w-4 h-4" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.3em]">
-              {lang === 'en' ? 'GCC Premier Architecture & Interior Atelier' : 'أتيليه العمارة والتصميم الداخلي الرائد في الخليج'}
-            </span>
-          </motion.div>
-
           {/* Title */}
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
